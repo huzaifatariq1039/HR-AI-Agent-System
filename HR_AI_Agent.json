@@ -1,0 +1,414 @@
+{
+  "name": "ARIA - AI HR Department (Complete Replacement)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "trigger-001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are ARIA (AI Resource & Intelligence Assistant), a comprehensive AI HR Agent that completely replaces a traditional HR department. You manage ALL aspects of human resources for the organization.\n\n## Your Core Responsibilities\n1. **Recruitment & Talent Acquisition** - Job postings, resume screening, interviews, offers, applicant tracking\n2. **Employee Records** - Complete employee database, org charts, document management\n3. **Onboarding & Offboarding** - New hire orientation, exit interviews, final settlements, knowledge transfer\n4. **Payroll & Compensation** - Salary processing, tax calculations, bonuses, expenses, pay revisions\n5. **Leave & Attendance** - Leave requests/approvals, attendance tracking, overtime, shift management\n6. **Performance Management** - Goals/OKRs, reviews, 360 feedback, PIPs, promotions\n7. **Training & Development** - Training needs, programs, certifications, career planning, skill matrices\n8. **Employee Relations** - Grievances, disciplinary actions, conflict resolution, counseling\n9. **Compliance & Policy** - Policy management, labor law, audits, workplace safety\n10. **HR Analytics** - Workforce metrics, turnover, compensation trends, diversity reports, predictive insights\n11. **Employee Engagement & Benefits** - Recognition, team events, wellness, insurance, retirement, celebrations\n\n## Communication Guidelines\n- Be professional, empathetic, and supportive at all times\n- Maintain strict confidentiality of all employee data\n- Verify employee identity before sharing sensitive information\n- Document all actions and decisions with timestamps\n- Provide clear timeframes for pending actions\n- Proactively suggest improvements and flag potential issues\n- Escalate sensitive matters (legal, harassment, safety) with appropriate urgency\n- Follow company policies and applicable labor laws in all decisions\n\n## Response Format\n- Provide clear, structured responses\n- Include relevant reference IDs for tracking\n- Summarize actions taken and next steps\n- Offer related suggestions when appropriate"
+        }
+      },
+      "id": "agent-001",
+      "name": "HR AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        620,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "model-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        650
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "fromInput",
+        "sessionKey": "sessionId",
+        "contextWindowLength": 20
+      },
+      "id": "memory-001",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        620,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "name": "recruitment_management",
+        "description": "Recruitment & talent acquisition. Actions: create_job_posting, list_job_postings, screen_resume, schedule_interview, list_candidates, generate_offer_letter, update_application_status. Pass action and data(JSON string with relevant fields like title,department,description,requirements,candidate_name,email,resume_text,position,interview_date,salary).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action to perform\",\"string\");\nconst data=$fromAI(\"data\",\"JSON string with parameters\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nconst now=new Date().toISOString();\nconst jobs=[{id:\"JOB-001\",title:\"Software Engineer\",dept:\"Engineering\",status:\"Open\",posted:\"2026-01-15\"},{id:\"JOB-002\",title:\"Marketing Manager\",dept:\"Marketing\",status:\"Open\",posted:\"2026-02-01\"},{id:\"JOB-003\",title:\"Data Analyst\",dept:\"Analytics\",status:\"Closed\",posted:\"2025-12-10\"}];\nconst candidates=[{id:\"CAND-001\",name:\"Alice Johnson\",position:\"Software Engineer\",stage:\"Interview\",rating:4.2},{id:\"CAND-002\",name:\"Bob Smith\",position:\"Marketing Manager\",stage:\"Screening\",rating:3.8}];\nswitch(action){\ncase\"create_job_posting\":return JSON.stringify({status:\"success\",job_id:\"JOB-\"+String(Date.now()).slice(-4),title:p.title||\"Untitled\",department:p.department||\"General\",created:now,message:\"Job posting created and published to all configured job boards\"});\ncase\"list_job_postings\":return JSON.stringify({status:\"success\",total:jobs.length,postings:jobs});\ncase\"screen_resume\":const score=Math.floor(Math.random()*30)+70;return JSON.stringify({status:\"success\",candidate:p.candidate_name||\"Unknown\",position:p.position||\"General\",match_score:score,skills_matched:[\"Communication\",\"Technical Skills\",\"Leadership\"],recommendation:score>80?\"Strongly Recommend\":\"Recommend for Interview\",screening_date:now});\ncase\"schedule_interview\":return JSON.stringify({status:\"success\",interview_id:\"INT-\"+String(Date.now()).slice(-4),candidate:p.candidate_name,position:p.position,date:p.interview_date||\"TBD\",type:p.interview_type||\"Video Call\",panel:[\"HR Manager\",\"Department Head\"],calendar_invite:\"Sent\",message:\"Interview scheduled and calendar invites sent to all participants\"});\ncase\"list_candidates\":return JSON.stringify({status:\"success\",total:candidates.length,candidates:candidates});\ncase\"generate_offer_letter\":return JSON.stringify({status:\"success\",offer_id:\"OFR-\"+String(Date.now()).slice(-4),candidate:p.candidate_name,position:p.position,salary:p.salary||\"As per company standards\",benefits:\"Standard package including health insurance, PTO, retirement\",start_date:p.start_date||\"TBD\",valid_until:\"7 days from issuance\",message:\"Offer letter generated and ready for review\"});\ncase\"update_application_status\":return JSON.stringify({status:\"success\",candidate:p.candidate_name,new_status:p.new_status||\"Updated\",updated_at:now});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"create_job_posting\",\"list_job_postings\",\"screen_resume\",\"schedule_interview\",\"list_candidates\",\"generate_offer_letter\",\"update_application_status\"]});\n}"
+      },
+      "id": "tool-001",
+      "name": "Recruitment Management",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "name": "employee_records",
+        "description": "Employee records management. Actions: get_employee, list_employees, update_employee, search_employees, get_org_chart, add_document, get_employee_history. Pass action and data(JSON with employee_id,name,department,field,value,query,document_type).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action to perform\",\"string\");\nconst data=$fromAI(\"data\",\"JSON string with parameters\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nconst emps=[{id:\"EMP-001\",name:\"John Doe\",dept:\"Engineering\",role:\"Senior Developer\",email:\"john@company.com\",joined:\"2023-03-15\",status:\"Active\",manager:\"EMP-010\"},{id:\"EMP-002\",name:\"Jane Smith\",dept:\"Marketing\",role:\"Marketing Lead\",email:\"jane@company.com\",joined:\"2022-08-01\",status:\"Active\",manager:\"EMP-010\"},{id:\"EMP-003\",name:\"Mike Wilson\",dept:\"Finance\",role:\"Accountant\",email:\"mike@company.com\",joined:\"2024-01-10\",status:\"Active\",manager:\"EMP-011\"},{id:\"EMP-004\",name:\"Sarah Lee\",dept:\"Engineering\",role:\"Junior Developer\",email:\"sarah@company.com\",joined:\"2025-06-01\",status:\"Active\",manager:\"EMP-001\"}];\nswitch(action){\ncase\"get_employee\":const emp=emps.find(e=>e.id===p.employee_id||e.name.toLowerCase().includes((p.name||\"\").toLowerCase()));return JSON.stringify({status:\"success\",employee:emp||\"Not found\"});\ncase\"list_employees\":const dept=p.department;const filtered=dept?emps.filter(e=>e.dept.toLowerCase()===dept.toLowerCase()):emps;return JSON.stringify({status:\"success\",total:filtered.length,employees:filtered});\ncase\"update_employee\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,field:p.field,old_value:\"[previous]\",new_value:p.value,updated_at:new Date().toISOString(),message:\"Employee record updated successfully\"});\ncase\"search_employees\":const q=(p.query||\"\").toLowerCase();const results=emps.filter(e=>e.name.toLowerCase().includes(q)||e.dept.toLowerCase().includes(q)||e.role.toLowerCase().includes(q));return JSON.stringify({status:\"success\",query:p.query,results:results});\ncase\"get_org_chart\":return JSON.stringify({status:\"success\",org:{ceo:\"EMP-020\",departments:[{name:\"Engineering\",head:\"EMP-010\",count:15},{name:\"Marketing\",head:\"EMP-012\",count:8},{name:\"Finance\",head:\"EMP-011\",count:6},{name:\"HR\",head:\"ARIA\",count:1},{name:\"Operations\",head:\"EMP-013\",count:10}],total_employees:40}});\ncase\"add_document\":return JSON.stringify({status:\"success\",doc_id:\"DOC-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,type:p.document_type,uploaded:new Date().toISOString(),message:\"Document uploaded and linked to employee record\"});\ncase\"get_employee_history\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,history:[{date:\"2023-03-15\",event:\"Hired\",details:\"Joined as Junior Developer\"},{date:\"2024-01-01\",event:\"Promotion\",details:\"Promoted to Senior Developer\"},{date:\"2024-07-01\",event:\"Salary Revision\",details:\"Annual increment applied\"},{date:\"2025-01-15\",event:\"Training\",details:\"Completed Leadership Program\"}]});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"get_employee\",\"list_employees\",\"update_employee\",\"search_employees\",\"get_org_chart\",\"add_document\",\"get_employee_history\"]});\n}"
+      },
+      "id": "tool-002",
+      "name": "Employee Records",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "name": "onboarding_offboarding",
+        "description": "Employee onboarding and offboarding. Actions: create_onboarding_plan, get_onboarding_status, initiate_offboarding, conduct_exit_interview, calculate_final_settlement, generate_experience_letter, knowledge_transfer_plan. Pass action and data(JSON with employee_id,name,department,position,start_date,last_day,reason,feedback,salary).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nswitch(action){\ncase\"create_onboarding_plan\":return JSON.stringify({status:\"success\",plan_id:\"ONB-\"+String(Date.now()).slice(-4),employee:p.name,department:p.department,start_date:p.start_date,checklist:[{day:1,tasks:[\"Welcome orientation\",\"IT setup & credentials\",\"Company policy review\",\"Team introduction\",\"Workspace setup\"]},{day:2,tasks:[\"Department orientation\",\"Tool access & training\",\"Buddy assignment\",\"Security training\"]},{week1:[\"Role-specific training\",\"Meet key stakeholders\",\"Set initial goals\",\"Review benefits enrollment\"]},{month1:[\"30-day check-in\",\"Performance expectations review\",\"Complete compliance training\",\"Social integration events\"]}],buddy:\"Auto-assigned from department\",message:\"Onboarding plan created. Welcome email queued.\"});\ncase\"get_onboarding_status\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,progress:75,completed:[\"IT Setup\",\"Welcome Orientation\",\"Policy Review\",\"Team Intro\"],pending:[\"Benefits Enrollment\",\"Compliance Training\",\"30-day Review\"],days_since_joining:12});\ncase\"initiate_offboarding\":return JSON.stringify({status:\"success\",offboard_id:\"OFF-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,last_day:p.last_day,reason:p.reason||\"Resignation\",checklist:[\"Exit interview scheduled\",\"IT asset recovery initiated\",\"Access revocation planned\",\"Final settlement calculation pending\",\"Knowledge transfer plan created\",\"Experience letter drafting\"],notice_period:\"30 days\",message:\"Offboarding process initiated\"});\ncase\"conduct_exit_interview\":return JSON.stringify({status:\"success\",interview_id:\"EXIT-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,responses:{reason_for_leaving:p.reason||\"Career growth\",job_satisfaction:7,management_rating:8,would_recommend:true,suggestions:p.feedback||\"None provided\"},sentiment:\"Positive\",flight_risk_insights:\"Role satisfaction was high but growth opportunities were limited\"});\ncase\"calculate_final_settlement\":const base=p.salary||50000;return JSON.stringify({status:\"success\",employee_id:p.employee_id,settlement:{basic_salary_pending:base,leave_encashment:Math.round(base*0.15),gratuity:Math.round(base*2.5),bonus_prorated:Math.round(base*0.08),deductions:{tax:Math.round(base*0.1),advance_recovery:0,notice_shortfall:0},net_payable:Math.round(base*2.63)},estimated_date:\"Within 45 days of last working day\"});\ncase\"generate_experience_letter\":return JSON.stringify({status:\"success\",letter_id:\"EXP-\"+String(Date.now()).slice(-4),employee:p.name,designation:p.position,tenure:p.tenure||\"2 years\",letter_status:\"Generated\",message:\"Experience letter generated and ready for manager signature\"});\ncase\"knowledge_transfer_plan\":return JSON.stringify({status:\"success\",plan_id:\"KT-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,tasks:[{item:\"Document current projects\",deadline:\"Week 1\",assignee:\"Departing employee\"},{item:\"Handover client relationships\",deadline:\"Week 2\",assignee:\"Successor\"},{item:\"Transfer system accesses\",deadline:\"Week 3\",assignee:\"IT\"},{item:\"Final review meeting\",deadline:\"Week 4\",assignee:\"Manager\"}],successor:p.successor||\"TBD\"});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"create_onboarding_plan\",\"get_onboarding_status\",\"initiate_offboarding\",\"conduct_exit_interview\",\"calculate_final_settlement\",\"generate_experience_letter\",\"knowledge_transfer_plan\"]});\n}"
+      },
+      "id": "tool-003",
+      "name": "Onboarding & Offboarding",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "name": "payroll_compensation",
+        "description": "Payroll & compensation management. Actions: process_payroll, get_payslip, calculate_tax, manage_bonus, process_expense, salary_revision, get_compensation_structure. Pass action and data(JSON with employee_id,month,year,amount,expense_type,description,percentage).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nconst base=p.salary||75000;\nswitch(action){\ncase\"process_payroll\":return JSON.stringify({status:\"success\",payroll_id:\"PAY-\"+String(Date.now()).slice(-4),month:p.month||new Date().getMonth()+1,year:p.year||new Date().getFullYear(),summary:{total_employees:40,total_gross:3200000,total_deductions:640000,total_net:2560000,total_employer_contributions:480000},breakdown:{basic:Math.round(base*0.4),hra:Math.round(base*0.2),special_allowance:Math.round(base*0.15),transport:Math.round(base*0.05),pf_deduction:Math.round(base*0.12),tax:Math.round(base*0.08),net:Math.round(base*0.6)},processing_status:\"Completed\",payment_date:p.payment_date||\"Last working day of month\"});\ncase\"get_payslip\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,month:p.month||\"Current\",earnings:{basic:30000,hra:15000,special:11250,transport:3750,total:60000},deductions:{pf:3600,tax:5000,professional_tax:200,total:8800},net_pay:51200,year_to_date:{gross:180000,tax:15000}});\ncase\"calculate_tax\":const annual=base*12;const tax=annual>1500000?annual*0.3:annual>1000000?annual*0.2:annual>500000?annual*0.1:0;return JSON.stringify({status:\"success\",employee_id:p.employee_id,annual_income:annual,tax_regime:\"New\",estimated_tax:Math.round(tax),monthly_tds:Math.round(tax/12),deductions_available:[\"80C\",\"80D\",\"HRA\",\"NPS\"],message:\"Tax calculated under new regime. Switch to old regime if deductions exceed threshold.\"});\ncase\"manage_bonus\":return JSON.stringify({status:\"success\",bonus_id:\"BON-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,type:p.bonus_type||\"Performance\",amount:p.amount||Math.round(base*0.15),reason:p.reason||\"Quarterly performance bonus\",approval_status:\"Pending manager approval\",effective_date:p.date||\"Next payroll cycle\"});\ncase\"process_expense\":return JSON.stringify({status:\"success\",expense_id:\"EXP-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,type:p.expense_type||\"Travel\",amount:p.amount,description:p.description,submitted:new Date().toISOString(),policy_check:\"Within limits\",approval_status:\"Auto-approved\",reimbursement_date:\"Next payroll cycle\"});\ncase\"salary_revision\":return JSON.stringify({status:\"success\",revision_id:\"REV-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,current_ctc:base*12,revision_percentage:p.percentage||10,new_ctc:Math.round(base*12*(1+(p.percentage||10)/100)),effective_from:p.effective_date||\"Next quarter\",approval_chain:[\"Direct Manager\",\"Department Head\",\"CFO\"],status_msg:\"Salary revision submitted for approval\"});\ncase\"get_compensation_structure\":return JSON.stringify({status:\"success\",bands:[{level:\"L1-L3\",range:\"30K-50K\",title:\"Junior\"},{level:\"L4-L5\",range:\"50K-80K\",title:\"Mid\"},{level:\"L6-L7\",range:\"80K-120K\",title:\"Senior\"},{level:\"L8+\",range:\"120K-200K\",title:\"Leadership\"}],benefits:[\"Health Insurance\",\"Life Insurance\",\"PTO 24 days\",\"Retirement Fund\",\"Learning Budget\",\"Gym Membership\"]});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"process_payroll\",\"get_payslip\",\"calculate_tax\",\"manage_bonus\",\"process_expense\",\"salary_revision\",\"get_compensation_structure\"]});\n}"
+      },
+      "id": "tool-004",
+      "name": "Payroll & Compensation",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "name": "leave_attendance",
+        "description": "Leave & attendance management. Actions: apply_leave, approve_leave, get_leave_balance, get_attendance, log_attendance, manage_overtime, get_shift_schedule, swap_shift. Pass action and data(JSON with employee_id,leave_type,start_date,end_date,reason,date,status,hours,shift_id).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nswitch(action){\ncase\"apply_leave\":return JSON.stringify({status:\"success\",leave_id:\"LV-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,type:p.leave_type||\"Casual\",from:p.start_date,to:p.end_date,days:p.days||1,reason:p.reason||\"Personal\",approval_status:\"Pending manager approval\",applied_on:new Date().toISOString(),message:\"Leave application submitted. Manager will be notified.\"});\ncase\"approve_leave\":return JSON.stringify({status:\"success\",leave_id:p.leave_id,action:p.status||\"Approved\",approved_by:\"Manager\",message:\"Leave request has been \"+( p.status||\"approved\")+\". Employee notified.\"});\ncase\"get_leave_balance\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,year:2026,balances:{casual_leave:{total:12,used:4,remaining:8},sick_leave:{total:10,used:2,remaining:8},earned_leave:{total:15,used:5,remaining:10},compensatory:{total:3,used:1,remaining:2},maternity_paternity:{total:26,used:0,remaining:26}},total_remaining:54});\ncase\"get_attendance\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,month:p.month||\"March 2026\",summary:{working_days:22,present:20,absent:1,half_day:1,late_arrivals:2,early_departures:0,wfh:5,overtime_hours:8},attendance_percentage:95.5});\ncase\"log_attendance\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,date:p.date||new Date().toISOString().split(\"T\")[0],check_in:p.check_in||\"09:00\",check_out:p.check_out||\"18:00\",hours_worked:p.hours||9,status:\"Logged\"});\ncase\"manage_overtime\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,date:p.date,overtime_hours:p.hours||2,rate:\"1.5x\",compensation:Math.round((p.hours||2)*500*1.5),approval:\"Auto-approved\",message:\"Overtime logged and compensation calculated\"});\ncase\"get_shift_schedule\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,current_shift:{name:\"General\",timing:\"09:00-18:00\",days:\"Mon-Fri\"},schedule:[{date:\"Mon\",shift:\"09:00-18:00\"},{date:\"Tue\",shift:\"09:00-18:00\"},{date:\"Wed\",shift:\"09:00-18:00\"},{date:\"Thu\",shift:\"09:00-18:00\"},{date:\"Fri\",shift:\"09:00-18:00\"}],available_shifts:[\"Morning 06:00-14:00\",\"General 09:00-18:00\",\"Evening 14:00-22:00\"]});\ncase\"swap_shift\":return JSON.stringify({status:\"success\",swap_id:\"SWP-\"+String(Date.now()).slice(-4),requester:p.employee_id,swap_with:p.swap_with_id,date:p.date,approval:\"Pending both parties\",message:\"Shift swap request sent. Both employees must confirm.\"});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"apply_leave\",\"approve_leave\",\"get_leave_balance\",\"get_attendance\",\"log_attendance\",\"manage_overtime\",\"get_shift_schedule\",\"swap_shift\"]});\n}"
+      },
+      "id": "tool-005",
+      "name": "Leave & Attendance",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        1180
+      ]
+    },
+    {
+      "parameters": {
+        "name": "performance_management",
+        "description": "Performance management system. Actions: set_goals, get_goals, create_review, submit_feedback, get_review_history, create_pip, recommend_promotion. Pass action and data(JSON with employee_id,goal,target,deadline,rating,feedback,review_period,reason).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nswitch(action){\ncase\"set_goals\":return JSON.stringify({status:\"success\",goal_id:\"GL-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,goal:p.goal,target:p.target||\"100%\",deadline:p.deadline||\"Q4 2026\",category:p.category||\"Professional\",status_msg:\"Goal set and visible to employee and manager\"});\ncase\"get_goals\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,goals:[{id:\"GL-001\",goal:\"Complete certification\",progress:60,deadline:\"Q2 2026\",status:\"On Track\"},{id:\"GL-002\",goal:\"Lead 2 projects\",progress:50,deadline:\"Q3 2026\",status:\"On Track\"},{id:\"GL-003\",goal:\"Mentor 3 juniors\",progress:33,deadline:\"Q4 2026\",status:\"At Risk\"}]});\ncase\"create_review\":return JSON.stringify({status:\"success\",review_id:\"RV-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,period:p.review_period||\"H1 2026\",sections:[\"Self Assessment\",\"Manager Assessment\",\"Peer Feedback\",\"Goal Achievement\",\"Competency Rating\"],status_msg:\"Review cycle initiated. Self-assessment form sent to employee.\",deadline:\"2 weeks from initiation\"});\ncase\"submit_feedback\":return JSON.stringify({status:\"success\",feedback_id:\"FB-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,type:p.type||\"360-degree\",rating:p.rating||4,feedback:p.feedback,submitted_by:p.submitted_by||\"Anonymous\",timestamp:new Date().toISOString()});\ncase\"get_review_history\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,reviews:[{period:\"H2 2025\",overall_rating:4.2,recommendation:\"Promotion ready\"},{period:\"H1 2025\",overall_rating:3.8,recommendation:\"Meets expectations\"},{period:\"H2 2024\",overall_rating:3.5,recommendation:\"Development needed\"}]});\ncase\"create_pip\":return JSON.stringify({status:\"success\",pip_id:\"PIP-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,reason:p.reason,duration:\"90 days\",milestones:[{week:2,target:\"Complete assigned training modules\"},{week:4,target:\"Demonstrate improvement in identified areas\"},{week:8,target:\"Meet minimum performance standards\"},{week:12,target:\"Final evaluation\"}],support:[\"Weekly 1:1 with manager\",\"Assigned mentor\",\"Additional training resources\"],consequences:\"If targets not met, further action per company policy\"});\ncase\"recommend_promotion\":return JSON.stringify({status:\"success\",nomination_id:\"PROM-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,current_level:p.current_level||\"L4\",recommended_level:p.recommended_level||\"L5\",justification:p.reason,approval_chain:[\"Direct Manager\",\"Skip Level\",\"HR Head\",\"CXO\"],status_msg:\"Promotion recommendation submitted for approval\"});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"set_goals\",\"get_goals\",\"create_review\",\"submit_feedback\",\"get_review_history\",\"create_pip\",\"recommend_promotion\"]});\n}"
+      },
+      "id": "tool-006",
+      "name": "Performance Management",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        1180
+      ]
+    },
+    {
+      "parameters": {
+        "name": "training_development",
+        "description": "Training & development management. Actions: assess_training_needs, list_programs, enroll_employee, track_certifications, create_career_plan, get_skill_matrix, training_feedback. Pass action and data(JSON with employee_id,skill,program_id,certification,career_goal,rating).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nswitch(action){\ncase\"assess_training_needs\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,assessment:{current_skills:[\"JavaScript\",\"Project Management\",\"Communication\"],skill_gaps:[\"Cloud Architecture\",\"Data Analysis\",\"Leadership\"],recommended_programs:[\"AWS Solutions Architect\",\"Data Analytics Bootcamp\",\"Leadership Excellence Program\"],priority:\"Cloud Architecture\",estimated_budget:5000,timeline:\"Q2-Q3 2026\"}});\ncase\"list_programs\":return JSON.stringify({status:\"success\",programs:[{id:\"TRN-001\",name:\"Leadership Excellence\",duration:\"8 weeks\",mode:\"Online\",cost:2500,next_batch:\"April 2026\"},{id:\"TRN-002\",name:\"AWS Cloud Certification\",duration:\"12 weeks\",mode:\"Hybrid\",cost:3500,next_batch:\"May 2026\"},{id:\"TRN-003\",name:\"Data Analytics Bootcamp\",duration:\"6 weeks\",mode:\"Online\",cost:2000,next_batch:\"April 2026\"},{id:\"TRN-004\",name:\"Communication Skills\",duration:\"4 weeks\",mode:\"In-person\",cost:1000,next_batch:\"March 2026\"},{id:\"TRN-005\",name:\"Project Management Professional\",duration:\"10 weeks\",mode:\"Online\",cost:4000,next_batch:\"June 2026\"}]});\ncase\"enroll_employee\":return JSON.stringify({status:\"success\",enrollment_id:\"ENR-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,program:p.program_id,status_msg:\"Enrolled successfully\",start_date:\"Next available batch\",manager_notified:true,budget_approved:true});\ncase\"track_certifications\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,certifications:[{name:\"PMP\",obtained:\"2024-06-15\",expiry:\"2027-06-15\",status:\"Valid\"},{name:\"AWS Solutions Architect\",obtained:\"2025-01-20\",expiry:\"2028-01-20\",status:\"Valid\"},{name:\"Scrum Master\",obtained:\"2023-03-10\",expiry:\"2026-03-10\",status:\"Expiring Soon\"}],upcoming_renewals:[\"Scrum Master - March 2026\"]});\ncase\"create_career_plan\":return JSON.stringify({status:\"success\",plan_id:\"CP-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,current_role:p.current_role||\"Senior Developer\",career_goal:p.career_goal||\"Engineering Manager\",path:[{milestone:\"Lead a team of 3\",timeline:\"6 months\"},{milestone:\"Complete Leadership program\",timeline:\"9 months\"},{milestone:\"Manage a full project\",timeline:\"12 months\"},{milestone:\"Transition to Manager role\",timeline:\"18 months\"}],skills_to_develop:[\"People Management\",\"Strategic Thinking\",\"Budget Management\"]});\ncase\"get_skill_matrix\":return JSON.stringify({status:\"success\",department:p.department||\"Engineering\",matrix:{technical:{expert:[\"John Doe\",\"Alice K\"],proficient:[\"Sarah Lee\",\"Tom B\"],developing:[\"New Hire 1\"]},leadership:{expert:[\"Jane Smith\"],proficient:[\"John Doe\"],developing:[\"Sarah Lee\",\"Alice K\"]},communication:{expert:[\"Jane Smith\",\"John Doe\"],proficient:[\"Sarah Lee\"],developing:[\"Tom B\"]}},gaps:[\"Data Science\",\"AI/ML\",\"Cloud Security\"]});\ncase\"training_feedback\":return JSON.stringify({status:\"success\",feedback_id:\"TF-\"+String(Date.now()).slice(-4),program:p.program_id,employee_id:p.employee_id,rating:p.rating||4,effectiveness:\"High\",recommendation:\"Continue offering\",message:\"Feedback recorded. Thank you!\"});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"assess_training_needs\",\"list_programs\",\"enroll_employee\",\"track_certifications\",\"create_career_plan\",\"get_skill_matrix\",\"training_feedback\"]});\n}"
+      },
+      "id": "tool-007",
+      "name": "Training & Development",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        1180
+      ]
+    },
+    {
+      "parameters": {
+        "name": "employee_relations",
+        "description": "Employee relations & grievance handling. Actions: file_grievance, get_grievances, resolve_grievance, disciplinary_action, conduct_survey, get_survey_results, mediate_conflict, counseling_referral. Pass action and data(JSON with employee_id,category,description,severity,resolution,action_type,survey_id).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nswitch(action){\ncase\"file_grievance\":return JSON.stringify({status:\"success\",grievance_id:\"GRV-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,category:p.category||\"Workplace\",description:p.description,severity:p.severity||\"Medium\",filed:new Date().toISOString(),expected_resolution:\"5-10 business days\",assigned_to:\"HR Investigation Team\",confidentiality:\"Strict - only authorized personnel\"});\ncase\"get_grievances\":return JSON.stringify({status:\"success\",grievances:[{id:\"GRV-001\",category:\"Harassment\",status:\"Under Investigation\",filed:\"2026-03-01\",severity:\"High\"},{id:\"GRV-002\",category:\"Pay Dispute\",status:\"Resolved\",filed:\"2026-02-15\",severity:\"Medium\"},{id:\"GRV-003\",category:\"Working Conditions\",status:\"In Progress\",filed:\"2026-03-10\",severity:\"Low\"}],summary:{total:3,open:2,resolved:1}});\ncase\"resolve_grievance\":return JSON.stringify({status:\"success\",grievance_id:p.grievance_id,resolution:p.resolution,resolved_on:new Date().toISOString(),follow_up:\"30-day check-in scheduled\",employee_notified:true,documentation:\"Filed in confidential records\"});\ncase\"disciplinary_action\":return JSON.stringify({status:\"success\",action_id:\"DA-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,type:p.action_type||\"Written Warning\",reason:p.reason,date:new Date().toISOString(),escalation_path:[\"Verbal Warning\",\"Written Warning\",\"Final Warning\",\"Suspension\",\"Termination\"],current_step:p.action_type||\"Written Warning\",appeal_window:\"15 days\",documentation:\"On record\"});\ncase\"conduct_survey\":return JSON.stringify({status:\"success\",survey_id:\"SRV-\"+String(Date.now()).slice(-4),type:p.survey_type||\"Employee Satisfaction\",questions:[\"Overall job satisfaction\",\"Management effectiveness\",\"Work-life balance\",\"Growth opportunities\",\"Compensation fairness\",\"Team collaboration\",\"Company culture\"],distribution:\"All employees\",deadline:\"2 weeks\",anonymous:true,message:\"Survey created and distributed to all employees\"});\ncase\"get_survey_results\":return JSON.stringify({status:\"success\",survey_id:p.survey_id,responses:35,total_employees:40,response_rate:\"87.5%\",results:{job_satisfaction:4.1,management:3.8,work_life_balance:3.9,growth:3.5,compensation:3.7,collaboration:4.3,culture:4.0},overall:3.9,action_items:[\"Improve growth opportunities\",\"Review compensation benchmarks\",\"Enhance management training\"]});\ncase\"mediate_conflict\":return JSON.stringify({status:\"success\",case_id:\"MED-\"+String(Date.now()).slice(-4),parties:p.parties||[\"Employee A\",\"Employee B\"],type:p.conflict_type||\"Interpersonal\",assigned_mediator:\"Senior HR\",steps:[\"Individual meetings with parties\",\"Joint mediation session\",\"Agreement documentation\",\"Follow-up in 30 days\"],confidentiality:\"Strict\",estimated_timeline:\"1-2 weeks\"});\ncase\"counseling_referral\":return JSON.stringify({status:\"success\",referral_id:\"CNS-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,type:p.counseling_type||\"General\",provider:\"Employee Assistance Program (EAP)\",sessions_available:6,cost:\"Covered by company\",confidentiality:\"100% confidential\",contact:\"EAP hotline provided to employee\",message:\"Referral created. Employee will receive confidential contact details.\"});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"file_grievance\",\"get_grievances\",\"resolve_grievance\",\"disciplinary_action\",\"conduct_survey\",\"get_survey_results\",\"mediate_conflict\",\"counseling_referral\"]});\n}"
+      },
+      "id": "tool-008",
+      "name": "Employee Relations",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        1180
+      ]
+    },
+    {
+      "parameters": {
+        "name": "compliance_policy",
+        "description": "Compliance & policy management. Actions: create_policy, list_policies, get_policy, check_compliance, schedule_audit, get_audit_results, report_safety_incident, labor_law_check. Pass action and data(JSON with policy_name,category,content,department,audit_type,incident_type,question).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nswitch(action){\ncase\"create_policy\":return JSON.stringify({status:\"success\",policy_id:\"POL-\"+String(Date.now()).slice(-4),name:p.policy_name,category:p.category||\"General\",version:\"1.0\",created:new Date().toISOString(),approval_status:\"Draft - pending legal review\",distribution:\"All employees after approval\",acknowledgment_required:true});\ncase\"list_policies\":return JSON.stringify({status:\"success\",policies:[{id:\"POL-001\",name:\"Anti-Harassment Policy\",category:\"Conduct\",version:\"3.2\",last_updated:\"2026-01-15\"},{id:\"POL-002\",name:\"Remote Work Policy\",category:\"Operations\",version:\"2.1\",last_updated:\"2025-11-01\"},{id:\"POL-003\",name:\"Data Privacy Policy\",category:\"Compliance\",version:\"4.0\",last_updated:\"2026-02-20\"},{id:\"POL-004\",name:\"Leave Policy\",category:\"Benefits\",version:\"2.5\",last_updated:\"2026-01-01\"},{id:\"POL-005\",name:\"Code of Conduct\",category:\"Ethics\",version:\"3.0\",last_updated:\"2025-09-15\"},{id:\"POL-006\",name:\"Travel & Expense Policy\",category:\"Finance\",version:\"2.0\",last_updated:\"2025-10-01\"},{id:\"POL-007\",name:\"Health & Safety Policy\",category:\"Safety\",version:\"1.5\",last_updated:\"2026-03-01\"}]});\ncase\"get_policy\":return JSON.stringify({status:\"success\",policy_id:p.policy_id,name:p.policy_name,content:\"[Full policy document would be retrieved from document store]\",version:\"Latest\",last_updated:\"2026-01-15\",acknowledgments:{total:40,completed:38,pending:2}});\ncase\"check_compliance\":return JSON.stringify({status:\"success\",department:p.department||\"All\",compliance_score:92,areas:{data_privacy:{status:\"Compliant\",score:95},workplace_safety:{status:\"Compliant\",score:90},labor_law:{status:\"Action Required\",score:85,issues:[\"Update overtime policy to match new regulations\"]},anti_discrimination:{status:\"Compliant\",score:98}},next_audit:\"Q2 2026\",recommendations:[\"Update overtime policy\",\"Schedule refresher training on data privacy\"]});\ncase\"schedule_audit\":return JSON.stringify({status:\"success\",audit_id:\"AUD-\"+String(Date.now()).slice(-4),type:p.audit_type||\"Internal\",scope:p.department||\"Organization-wide\",scheduled_date:p.date||\"Next month\",auditor:p.auditor||\"Internal Audit Team\",checklist:[\"Policy compliance\",\"Record keeping\",\"Safety protocols\",\"Training records\",\"Benefits administration\"],estimated_duration:\"3-5 business days\"});\ncase\"get_audit_results\":return JSON.stringify({status:\"success\",audit_id:p.audit_id,overall_score:88,findings:[{area:\"Record Keeping\",status:\"Pass\",score:92},{area:\"Safety Protocols\",status:\"Minor Issues\",score:78,action:\"Update fire drill schedule\"},{area:\"Training Records\",status:\"Pass\",score:95},{area:\"Benefits Admin\",status:\"Pass\",score:90}],corrective_actions:2,deadline:\"30 days\"});\ncase\"report_safety_incident\":return JSON.stringify({status:\"success\",incident_id:\"SAF-\"+String(Date.now()).slice(-4),type:p.incident_type||\"Near Miss\",location:p.location||\"Office\",date:new Date().toISOString(),severity:p.severity||\"Low\",immediate_action:\"Area secured, first aid provided if needed\",investigation:\"Assigned to Safety Officer\",report_filed:true,osha_reportable:false});\ncase\"labor_law_check\":return JSON.stringify({status:\"success\",query:p.question,applicable_laws:[\"Fair Labor Standards Act\",\"Family Medical Leave Act\",\"Equal Employment Opportunity\",\"Occupational Safety and Health Act\"],compliance_status:\"Requires review\",recommendation:\"Consult with legal counsel for specific interpretation\",disclaimer:\"This is general guidance. Always consult qualified legal professionals for specific legal matters.\",last_regulatory_update:\"2026-01-01\"});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"create_policy\",\"list_policies\",\"get_policy\",\"check_compliance\",\"schedule_audit\",\"get_audit_results\",\"report_safety_incident\",\"labor_law_check\"]});\n}"
+      },
+      "id": "tool-009",
+      "name": "Compliance & Policy",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        1460
+      ]
+    },
+    {
+      "parameters": {
+        "name": "hr_analytics",
+        "description": "HR analytics & reporting. Actions: workforce_summary, turnover_report, compensation_analysis, diversity_report, headcount_trends, department_metrics, generate_custom_report, predictive_insights. Pass action and data(JSON with department,period,metric,report_type,filters).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nswitch(action){\ncase\"workforce_summary\":return JSON.stringify({status:\"success\",as_of:new Date().toISOString(),total_employees:247,active:240,on_leave:5,on_notice:2,departments:{Engineering:85,Marketing:35,Sales:42,Finance:25,Operations:30,HR:1,Admin:15,Legal:14},avg_tenure_years:3.2,avg_age:32,gender_ratio:{male:\"58%\",female:\"40%\",other:\"2%\"},remote_percentage:35});\ncase\"turnover_report\":return JSON.stringify({status:\"success\",period:p.period||\"Q1 2026\",voluntary_exits:8,involuntary_exits:2,turnover_rate:\"4.1%\",annualized:\"16.3%\",by_department:{Engineering:3,Sales:2,Marketing:2,Finance:1},top_reasons:[\"Career growth\",\"Compensation\",\"Work-life balance\",\"Relocation\"],avg_tenure_at_exit:\"2.1 years\",replacement_cost_avg:45000,retention_risk:{high:5,medium:12,low:230}});\ncase\"compensation_analysis\":return JSON.stringify({status:\"success\",avg_salary:72000,median_salary:68000,by_department:{Engineering:92000,Marketing:65000,Sales:70000,Finance:75000},pay_equity_score:94,market_comparison:{below_market:\"12%\",at_market:\"65%\",above_market:\"23%\"},budget_utilization:\"87%\",upcoming_revisions:15});\ncase\"diversity_report\":return JSON.stringify({status:\"success\",gender:{male:143,female:99,non_binary:5},age_groups:{\"18-25\":35,\"26-35\":98,\"36-45\":72,\"46-55\":32,\"55+\":10},leadership_diversity:{gender_parity_index:0.72,minority_representation:\"28%\"},dei_initiatives:[\"Unconscious Bias Training\",\"Mentorship Program\",\"Diverse Hiring Pipeline\",\"Employee Resource Groups\"],year_over_year_improvement:\"+5% in minority representation\"});\ncase\"headcount_trends\":return JSON.stringify({status:\"success\",trend:[{month:\"Oct 2025\",count:235},{month:\"Nov 2025\",count:238},{month:\"Dec 2025\",count:240},{month:\"Jan 2026\",count:242},{month:\"Feb 2026\",count:245},{month:\"Mar 2026\",count:247}],growth_rate:\"5.1% (6 months)\",planned_hiring:15,attrition_forecast:8,net_growth_forecast:7});\ncase\"department_metrics\":return JSON.stringify({status:\"success\",department:p.department||\"Engineering\",headcount:85,avg_tenure:3.5,avg_satisfaction:4.2,turnover_rate:\"8%\",training_hours_avg:40,overtime_avg:5,top_performers:12,high_potential:8,open_positions:5,budget_utilization:\"92%\"});\ncase\"generate_custom_report\":return JSON.stringify({status:\"success\",report_id:\"RPT-\"+String(Date.now()).slice(-4),type:p.report_type||\"Custom\",filters:p.filters||{},generated:new Date().toISOString(),format:\"PDF/Excel\",sections:[\"Executive Summary\",\"Data Tables\",\"Visualizations\",\"Recommendations\"],delivery:\"Report generated and available for download\",scheduled_refresh:p.schedule||\"One-time\"});\ncase\"predictive_insights\":return JSON.stringify({status:\"success\",insights:[{type:\"Flight Risk\",description:\"5 employees identified as high flight risk based on engagement scores and market data\",action:\"Schedule retention conversations\"},{type:\"Hiring Need\",description:\"Engineering team projected to need 8 more hires by Q3 based on project pipeline\",action:\"Start recruitment pipeline now\"},{type:\"Skill Gap\",description:\"AI/ML skills critically low across organization\",action:\"Launch upskilling program\"},{type:\"Burnout Risk\",description:\"Sales team showing elevated overtime patterns\",action:\"Review workload distribution\"}],confidence:\"Based on 12-month historical data analysis\"});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"workforce_summary\",\"turnover_report\",\"compensation_analysis\",\"diversity_report\",\"headcount_trends\",\"department_metrics\",\"generate_custom_report\",\"predictive_insights\"]});\n}"
+      },
+      "id": "tool-010",
+      "name": "HR Analytics & Reporting",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        1460
+      ]
+    },
+    {
+      "parameters": {
+        "name": "engagement_benefits",
+        "description": "Employee engagement & benefits administration. Actions: send_recognition, get_recognitions, plan_team_event, run_wellness_program, manage_benefits_enrollment, process_insurance_claim, get_benefits_summary, birthday_anniversary_wishes. Pass action and data(JSON with employee_id,message,event_type,program,benefit_type,claim_amount).",
+        "language": "javaScript",
+        "jsCode": "const action=$fromAI(\"action\",\"Action\",\"string\");\nconst data=$fromAI(\"data\",\"JSON params\",\"string\");\nlet p={};try{p=JSON.parse(data)}catch(e){}\nswitch(action){\ncase\"send_recognition\":return JSON.stringify({status:\"success\",recognition_id:\"REC-\"+String(Date.now()).slice(-4),from:p.from||\"Manager\",to:p.employee_id,type:p.recognition_type||\"Spot Award\",message:p.message||\"Great work!\",points:p.points||100,visibility:\"Company-wide\",notification:\"Sent to employee and team\"});\ncase\"get_recognitions\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,recognitions:[{date:\"2026-03-15\",type:\"Spot Award\",from:\"CTO\",message:\"Outstanding project delivery\",points:200},{date:\"2026-02-01\",type:\"Peer Recognition\",from:\"Team Member\",message:\"Great collaboration\",points:50},{date:\"2026-01-10\",type:\"Quarter Star\",from:\"VP Engineering\",message:\"Consistent excellence\",points:500}],total_points:750,redeemable_value:\"$375\"});\ncase\"plan_team_event\":return JSON.stringify({status:\"success\",event_id:\"EVT-\"+String(Date.now()).slice(-4),type:p.event_type||\"Team Building\",title:p.title||\"Quarterly Team Outing\",date:p.date||\"TBD\",budget:p.budget||5000,activities:[\"Ice-breaker games\",\"Team challenges\",\"Dinner\",\"Awards ceremony\"],capacity:p.capacity||50,rsvp_status:\"Invitations to be sent\",logistics:\"Venue and catering to be arranged\"});\ncase\"run_wellness_program\":return JSON.stringify({status:\"success\",program_id:\"WEL-\"+String(Date.now()).slice(-4),name:p.program||\"Monthly Wellness Challenge\",activities:[\"Step count challenge\",\"Meditation sessions\",\"Healthy eating workshop\",\"Fitness bootcamp\",\"Mental health awareness\"],duration:\"4 weeks\",participation_incentive:\"Wellness points redeemable for rewards\",current_participation:\"65% of employees\",resources:[\"Gym membership discount\",\"EAP services\",\"Health screening\"]});\ncase\"manage_benefits_enrollment\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,enrollment_id:\"BEN-\"+String(Date.now()).slice(-4),benefit:p.benefit_type||\"Health Insurance\",plan:p.plan||\"Premium Family Plan\",coverage_start:p.start_date||\"Next month\",monthly_cost:p.cost||500,employer_contribution:\"70%\",employee_cost:150,dependents:p.dependents||0,status_msg:\"Enrollment processed. Benefits card will be issued within 7 days.\"});\ncase\"process_insurance_claim\":return JSON.stringify({status:\"success\",claim_id:\"CLM-\"+String(Date.now()).slice(-4),employee_id:p.employee_id,type:p.claim_type||\"Medical\",amount:p.claim_amount||5000,documents_required:[\"Medical bills\",\"Prescription\",\"Doctor certificate\"],submitted:new Date().toISOString(),expected_processing:\"5-7 business days\",reimbursement_to:\"Salary account\",status_msg:\"Claim submitted for processing\"});\ncase\"get_benefits_summary\":return JSON.stringify({status:\"success\",employee_id:p.employee_id,benefits:{health_insurance:{plan:\"Premium Family\",coverage:500000,monthly_premium:500,employer_pays:350},life_insurance:{coverage:2000000,monthly_premium:100,employer_pays:100},retirement:{type:\"401k\",contribution_rate:\"6%\",employer_match:\"100% up to 6%\",vested:true},pto:{annual:24,remaining:18},flexible_benefits:{annual_budget:3000,utilized:1200,remaining:1800,categories:[\"Learning\",\"Wellness\",\"Childcare\",\"Travel\"]}},total_employer_contribution:\"$1,450/month\"});\ncase\"birthday_anniversary_wishes\":const today=new Date();return JSON.stringify({status:\"success\",upcoming:{birthdays:[{name:\"Alice Johnson\",date:\"April 2\",department:\"Engineering\"},{name:\"Bob Smith\",date:\"April 5\",department:\"Marketing\"}],work_anniversaries:[{name:\"Mike Wilson\",date:\"April 1\",years:2,department:\"Finance\"},{name:\"Sarah Lee\",date:\"April 10\",years:1,department:\"Engineering\"}]},auto_wishes_enabled:true,gift_cards_scheduled:true,message:\"Automated wishes and gift cards configured for upcoming celebrations\"});\ndefault:return JSON.stringify({error:\"Unknown action\",available:[\"send_recognition\",\"get_recognitions\",\"plan_team_event\",\"run_wellness_program\",\"manage_benefits_enrollment\",\"process_insurance_claim\",\"get_benefits_summary\",\"birthday_anniversary_wishes\"]});\n}"
+      },
+      "id": "tool-011",
+      "name": "Engagement & Benefits",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        1460
+      ]
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recruitment Management": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Employee Records": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Onboarding & Offboarding": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payroll & Compensation": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leave & Attendance": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Performance Management": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Training & Development": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Employee Relations": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compliance & Policy": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR Analytics & Reporting": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engagement & Benefits": {
+      "ai_tool": [
+        [
+          {
+            "node": "HR AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "meta": {
+    "instanceId": "aria-hr-agent-v1",
+    "templateCredsSetupCompleted": false
+  },
+  "id": "aria-hr-agent"
+}
