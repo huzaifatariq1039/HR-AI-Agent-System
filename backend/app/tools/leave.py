@@ -1,55 +1,15 @@
 """
 Leave & Attendance Tools
 ==========================
-Tools for managing employee leave requests, balances, and attendance.
+Tools for managing leave requests and balances via MongoDB.
 """
 
 import json
 import uuid
 from datetime import datetime
-from typing import Optional
-
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
-
-MOCK_LEAVE_BALANCES = {
-    "EMP-001": {
-        "employee_id": "EMP-001",
-        "employee_name": "John Doe",
-        "fiscal_year": "2026",
-        "balances": {
-            "annual_leave": {"total": 20, "used": 8, "remaining": 12},
-            "sick_leave": {"total": 10, "used": 2, "remaining": 8},
-            "personal_leave": {"total": 5, "used": 1, "remaining": 4},
-            "parental_leave": {"total": 12, "used": 0, "remaining": 12},
-        },
-    },
-    "EMP-002": {
-        "employee_id": "EMP-002",
-        "employee_name": "Sarah Johnson",
-        "fiscal_year": "2026",
-        "balances": {
-            "annual_leave": {"total": 22, "used": 12, "remaining": 10},
-            "sick_leave": {"total": 10, "used": 5, "remaining": 5},
-            "personal_leave": {"total": 5, "used": 3, "remaining": 2},
-            "parental_leave": {"total": 12, "used": 0, "remaining": 12},
-        },
-    },
-    "EMP-003": {
-        "employee_id": "EMP-003",
-        "employee_name": "Alex Chen",
-        "fiscal_year": "2026",
-        "balances": {
-            "annual_leave": {"total": 18, "used": 3, "remaining": 15},
-            "sick_leave": {"total": 10, "used": 0, "remaining": 10},
-            "personal_leave": {"total": 5, "used": 0, "remaining": 5},
-            "parental_leave": {"total": 12, "used": 0, "remaining": 12},
-        },
-    },
-}
-
-MOCK_LEAVE_REQUESTS: list[dict] = []
-
+from app.db import get_db
 
 class ApplyLeaveInput(BaseModel):
     employee_id: str = Field(..., description="Employee ID (e.g., 'EMP-001')")
@@ -58,22 +18,18 @@ class ApplyLeaveInput(BaseModel):
     end_date: str = Field(..., description="End date YYYY-MM-DD")
     reason: str = Field(default="", description="Reason for leave")
 
-
 class GetLeaveBalanceInput(BaseModel):
     employee_id: str = Field(..., description="Employee ID (e.g., 'EMP-001')")
 
-
 @tool(args_schema=ApplyLeaveInput)
-def apply_leave(employee_id: str, leave_type: str, start_date: str, end_date: str, reason: str = "") -> str:
+async def apply_leave(employee_id: str, leave_type: str, start_date: str, end_date: str, reason: str = "") -> str:
     """Submit a leave request for an employee.
 
-    Use this tool when someone asks to apply for leave, request time off, take
-    vacation, request sick days, or submit any kind of leave application. Validates
-    the leave balance, checks dates, and creates a pending leave request.
-
-    Supported leave types: annual_leave, sick_leave, personal_leave, parental_leave.
+    Use this tool to apply for leave, request time off, take vacation, or sick days.
+    Validates balance and creates a pending request.
     """
-    balance_data = MOCK_LEAVE_BALANCES.get(employee_id.upper())
+    db = get_db()
+    balance_data = await db.leave_balances.find_one({"employee_id": employee_id.upper()}, {"_id": 0})
     if not balance_data:
         return json.dumps({"success": False, "message": f"No employee found with ID '{employee_id}'."}, indent=2)
 
@@ -97,19 +53,22 @@ def apply_leave(employee_id: str, leave_type: str, start_date: str, end_date: st
         "start_date": start_date, "end_date": end_date, "days": days_requested,
         "reason": reason, "status": "Pending Approval", "submitted_at": datetime.now().isoformat(),
     }
-    MOCK_LEAVE_REQUESTS.append(leave_request)
+    
+    await db.leave_requests.insert_one(leave_request)
+    leave_request.pop("_id", None)
+    
+    # Optional: Deduct balance here or keep pending until approved. Currently kept as pending.
     return json.dumps({"success": True, "message": "Leave request submitted successfully.", "request": leave_request}, indent=2)
 
-
 @tool(args_schema=GetLeaveBalanceInput)
-def get_leave_balance(employee_id: str) -> str:
+async def get_leave_balance(employee_id: str) -> str:
     """Check the leave balance for an employee across all leave types.
 
     Use this tool when someone asks about remaining leave, vacation days, sick days,
-    leave balance, time-off balance, or PTO. Returns all leave categories with
-    total entitlement, days used, and days remaining.
+    or PTO. Returns all leave categories with entitlement, used, and remaining days.
     """
-    balance_data = MOCK_LEAVE_BALANCES.get(employee_id.upper())
+    db = get_db()
+    balance_data = await db.leave_balances.find_one({"employee_id": employee_id.upper()}, {"_id": 0})
     if not balance_data:
         return json.dumps({"success": False, "message": f"No leave data found for '{employee_id}'."}, indent=2)
     return json.dumps({"success": True, "leave_balance": balance_data}, indent=2)

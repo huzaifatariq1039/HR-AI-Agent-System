@@ -1,7 +1,7 @@
 """
 Engagement & Benefits Tools
 ==============================
-Tools for employee recognition and engagement programs.
+Tools for employee recognition using MongoDB.
 """
 
 import json
@@ -9,9 +9,7 @@ import uuid
 from datetime import datetime
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
-
-MOCK_RECOGNITIONS: list[dict] = []
-
+from app.db import get_db
 
 class SendRecognitionInput(BaseModel):
     recipient_id: str = Field(..., description="Employee ID receiving recognition (e.g., 'EMP-001')")
@@ -22,17 +20,14 @@ class SendRecognitionInput(BaseModel):
         description="Category: 'innovation', 'teamwork', 'leadership', 'customer_focus', 'above_and_beyond'",
     )
 
-
 @tool(args_schema=SendRecognitionInput)
-def send_recognition(recipient_id: str, sender_name: str, message: str, category: str = "teamwork") -> str:
+async def send_recognition(recipient_id: str, sender_name: str, message: str, category: str = "teamwork") -> str:
     """Send a recognition or kudos to an employee for outstanding work.
 
     Use this tool when someone wants to recognize, appreciate, thank, give kudos,
-    or send a shout-out to an employee. Creates a public recognition entry visible
-    across the organization.
-
-    Categories: innovation, teamwork, leadership, customer_focus, above_and_beyond.
+    or send a shout-out to an employee. Creates a public recognition entry.
     """
+    db = get_db()
     valid = ["innovation", "teamwork", "leadership", "customer_focus", "above_and_beyond"]
     if category.lower() not in valid:
         category = "teamwork"
@@ -46,5 +41,7 @@ def send_recognition(recipient_id: str, sender_name: str, message: str, category
         "created_at": datetime.now().isoformat(),
         "points_awarded": 50,
     }
-    MOCK_RECOGNITIONS.append(recognition)
+    await db.recognitions.insert_one(recognition)
+    # Remove _id from response
+    recognition.pop("_id", None)
     return json.dumps({"success": True, "message": "Recognition sent successfully! 🎉", "recognition": recognition}, indent=2)
