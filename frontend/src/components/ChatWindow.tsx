@@ -20,6 +20,8 @@ import type { Message, ToolEvent } from '../types';
 interface ChatWindowProps {
   sessionId: string;
   onToggleSidebar: () => void;
+  selectedPrompt?: string;
+  onPromptConsumed?: () => void;
 }
 
 /** Generate a unique message ID. */
@@ -27,7 +29,7 @@ function generateId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export default function ChatWindow({ sessionId, onToggleSidebar }: ChatWindowProps) {
+export default function ChatWindow({ sessionId, onToggleSidebar, selectedPrompt, onPromptConsumed }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +50,15 @@ export default function ChatWindow({ sessionId, onToggleSidebar }: ChatWindowPro
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading, scrollToBottom]);
+
+  /** Handle selected prompt from sidebar */
+  useEffect(() => {
+    if (selectedPrompt) {
+      setInput(selectedPrompt);
+      inputRef.current?.focus();
+      onPromptConsumed?.();
+    }
+  }, [selectedPrompt, onPromptConsumed]);
 
   /** Initialize WebSocket connection. */
   useEffect(() => {

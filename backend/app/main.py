@@ -13,6 +13,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.chat import router as chat_router
+from app.api import (
+    recruitment, records, onboarding, payroll, 
+    leave, performance, training, relations, compliance, analytics, engagement
+)
 
 # ---------------------------------------------------------------------------
 # Load environment variables from .env file (if present)
@@ -60,6 +64,19 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 app.include_router(chat_router, prefix="/api")
+
+# Mount Dashboard REST API routes
+app.include_router(recruitment.router, prefix="/api/recruitment", tags=["recruitment"])
+app.include_router(records.router, prefix="/api/records", tags=["records"])
+app.include_router(onboarding.router, prefix="/api/onboarding", tags=["onboarding"])
+app.include_router(payroll.router, prefix="/api/payroll", tags=["payroll"])
+app.include_router(leave.router, prefix="/api/leave", tags=["leave"])
+app.include_router(performance.router, prefix="/api/performance", tags=["performance"])
+app.include_router(training.router, prefix="/api/training", tags=["training"])
+app.include_router(relations.router, prefix="/api/relations", tags=["relations"])
+app.include_router(compliance.router, prefix="/api/compliance", tags=["compliance"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(engagement.router, prefix="/api/engagement", tags=["engagement"])
 
 
 # ---------------------------------------------------------------------------
