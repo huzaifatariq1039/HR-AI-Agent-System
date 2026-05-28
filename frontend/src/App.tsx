@@ -46,7 +46,7 @@ export default function App() {
           setSidebarOpen(false);
         }}
       />
-      <div className="flex-1 flex overflow-hidden bg-[#0B0C10]">
+      <div className="flex-1 flex overflow-hidden bg-transparent">
         <Routes>
           <Route path="/" element={<ChatWindow sessionId={sessionId} onToggleSidebar={() => setSidebarOpen((prev) => !prev)} selectedPrompt={selectedPrompt} onPromptConsumed={() => setSelectedPrompt(undefined)} />} />
           <Route path="/recruitment" element={<RecruitmentPage />} />

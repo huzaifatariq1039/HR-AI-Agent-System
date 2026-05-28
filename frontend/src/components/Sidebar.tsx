@@ -17,17 +17,17 @@ interface SidebarProps {
 }
 
 const TOOL_CATEGORIES = [
-  { name: 'Recruitment',       path: '/recruitment', icon: Briefcase,     color: '#6366f1' },
-  { name: 'Employee Records',  path: '/records',     icon: Users,         color: '#8b5cf6' },
-  { name: 'Onboarding',        path: '/onboarding',  icon: Rocket,        color: '#06b6d4' },
-  { name: 'Payroll',           path: '/payroll',     icon: DollarSign,    color: '#10b981' },
-  { name: 'Leave & Attendance',path: '/leave',       icon: CalendarDays,  color: '#f59e0b' },
-  { name: 'Performance',       path: '/performance', icon: Target,        color: '#ec4899' },
-  { name: 'Training',          path: '/training',    icon: BookOpen,      color: '#14b8a6' },
-  { name: 'Relations',         path: '/relations',   icon: HandshakeIcon, color: '#f97316' },
-  { name: 'Compliance',        path: '/compliance',  icon: ShieldCheck,   color: '#64748b' },
-  { name: 'Analytics',         path: '/analytics',   icon: BarChart3,     color: '#3b82f6' },
-  { name: 'Engagement',        path: '/engagement',  icon: Heart,         color: '#a855f7' },
+  { name: 'Recruitment',       path: '/recruitment', icon: Briefcase,     color: '#00ADB5' },
+  { name: 'Employee Records',  path: '/records',     icon: Users,         color: '#00ADB5' },
+  { name: 'Onboarding',        path: '/onboarding',  icon: Rocket,        color: '#00ADB5' },
+  { name: 'Payroll',           path: '/payroll',     icon: DollarSign,    color: '#00ADB5' },
+  { name: 'Leave & Attendance',path: '/leave',       icon: CalendarDays,  color: '#00ADB5' },
+  { name: 'Performance',       path: '/performance', icon: Target,        color: '#00ADB5' },
+  { name: 'Training',          path: '/training',    icon: BookOpen,      color: '#00ADB5' },
+  { name: 'Relations',         path: '/relations',   icon: HandshakeIcon, color: '#00ADB5' },
+  { name: 'Compliance',        path: '/compliance',  icon: ShieldCheck,   color: '#00ADB5' },
+  { name: 'Analytics',         path: '/analytics',   icon: BarChart3,     color: '#00ADB5' },
+  { name: 'Engagement',        path: '/engagement',  icon: Heart,         color: '#00ADB5' },
 ];
 
 const CATEGORY_PROMPTS: Record<string, string> = {

@@ -13,28 +13,28 @@
 /* ── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
   /* Background layers */
-  --bg-primary: #0a0a12;
-  --bg-secondary: #12121e;
-  --bg-tertiary: #1a1a2e;
-  --bg-elevated: #222240;
+  --bg-primary: #222831;
+  --bg-secondary: #393E46;
+  --bg-tertiary: rgba(238, 238, 238, 0.05);
+  --bg-elevated: #393E46;
 
   /* Accent gradient */
-  --accent-start: #6366f1;
-  --accent-mid: #8b5cf6;
-  --accent-end: #a855f7;
+  --accent-start: #00ADB5;
+  --accent-mid: #00ADB5;
+  --accent-end: #00ADB5;
 
   /* Text */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #EEEEEE;
+  --text-secondary: rgba(238, 238, 238, 0.75);
+  --text-muted: rgba(238, 238, 238, 0.45);
 
   /* Borders */
-  --border-subtle: rgba(148, 163, 184, 0.08);
-  --border-active: rgba(99, 102, 241, 0.3);
+  --border-subtle: rgba(238, 238, 238, 0.1);
+  --border-active: rgba(0, 173, 181, 0.5);
 
   /* Glass effect */
-  --glass-bg: rgba(30, 30, 50, 0.6);
-  --glass-border: rgba(148, 163, 184, 0.1);
+  --glass-bg: rgba(57, 62, 70, 0.6);
+  --glass-border: rgba(238, 238, 238, 0.1);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 
   /* Sizing */
