@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import ChatWindow from './components/ChatWindow';
 
@@ -27,6 +27,7 @@ function generateSessionId(): string {
 }
 
 export default function App() {
+  const navigate = useNavigate();
   const [sessionId, setSessionId] = useState(generateSessionId);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>(undefined);
@@ -44,6 +45,7 @@ export default function App() {
         onCategoryClick={(prompt) => {
           setSelectedPrompt(prompt);
           setSidebarOpen(false);
+          navigate('/');
         }}
       />
       <div className="flex-1 flex overflow-hidden bg-transparent">

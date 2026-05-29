@@ -14,6 +14,7 @@ interface SidebarProps {
   onNewChat: () => void;
   isOpen: boolean;
   onClose: () => void;
+  onCategoryClick: (prompt: string) => void;
 }
 
 const TOOL_CATEGORIES = [
@@ -102,7 +103,14 @@ export default function Sidebar({ onNewChat, isOpen, onClose, onCategoryClick }:
                 key={cat.name}
                 to={cat.path}
                 className={({ isActive }) => `sidebar__category ${isActive ? 'sidebar__category--active' : ''}`}
-                onClick={onClose}
+                onClick={(e) => {
+                  if (CATEGORY_PROMPTS[cat.name]) {
+                    e.preventDefault();
+                    onCategoryClick(CATEGORY_PROMPTS[cat.name]);
+                  } else {
+                    onClose();
+                  }
+                }}
               >
                 <div className="sidebar__category-icon" style={{ color: cat.color }}>
                   <Icon size={16} />
